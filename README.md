@@ -1,122 +1,137 @@
+Real-Time Order Book Visualizer (Binance)
+=========================================
+
+A high-performance, real-time order book and recent trades visualizer for Binance spot markets, built with Next.js (App Router) and TypeScript. It connects directly to Binance WebSocket streams for aggregate trades and order book delta updates.
+
+Tech stack
+----------
+- Next.js (App Router, TypeScript)
+- Tailwind CSS
+- Lightweight state + batching with React hooks
+
+Getting started
+---------------
+
+Prerequisites: Node 18+ and npm.
+
+1. Install dependencies:
+
+```
+npm install
+```
+
+2. Run the dev server:
+
+```
+npm run dev
+```
+
+Open `http://localhost:3000` in your browser.
+
+Build for production:
+
+```
+npm run build
+npm start
+```
+
+Features
+--------
+- Live WebSocket data from Binance for a selected symbol (default `BTC/USDT`).
+- Order book:
+  - Aggregates delta updates for bids and asks.
+  - Correct removal of levels when quantity is 0.
+  - Sorted: bids (DESC), asks (ASC).
+  - Cumulative totals and visual depth bars per side.
+  - Spread display between best ask and best bid.
+- Recent trades:
+  - Top-50 rolling list of aggregate trades.
+  - Price flashes green for market buys and red for market sells.
+
+Implementation notes
+--------------------
+- The WebSocket hook `useBinanceSocket` combines two Binance streams: `<symbol>@aggTrade` and `<symbol>@depth@100ms`.
+- Deltas are accumulated in `Map`s to achieve O(1) updates per level; UI re-renders are throttled via `requestAnimationFrame` to keep the interface smooth under high frequency.
+- Trade side is derived from the Binance aggTrade flag `m` (buyer is maker):
+  - `m === false` ⇒ taker buy (market buy) ⇒ green
+  - `m === true` ⇒ taker sell (market sell) ⇒ red
+
+Design choices
+--------------
+- Kept dependencies minimal and used React hooks for state and memoization to reduce re-render cost.
+- Batched UI updates on animation frames instead of updating on every message to avoid jank.
+- Chosen Tailwind for fast, consistent styling.
+
+Deployment
+----------
+Deploy easily to Vercel:
+
+1. Push this repository to GitHub.
+2. Import it in Vercel and use default settings (Next.js). 
+3. After deployment, share the live URL.
+
+Notes
+-----
+- For production-grade order book accuracy, you would synchronize with a snapshot from the REST API and apply depth diffs using update IDs. For this assignment, the real-time delta aggregation approach is sufficient and keeps the UI highly responsive.
+
+Assignment brief
+----------------
+
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/qj3BO8Gh)
-# Frontend Engineering Assignment: Real-Time Order Book Visualizer
 
-Please submit the Google Form once the assignment is completed.
+Please submit the Google Form once the assignment is completed: [Submit Here](https://docs.google.com/forms/d/e/1FAIpQLSd15DGAPqTj8cThebb6Biz19ckc8aHD4o5vkhRfP-lO0WE4Kw/viewform)
 
-[Submit Here](https://docs.google.com/forms/d/e/1FAIpQLSd15DGAPqTj8cThebb6Biz19ckc8aHD4o5vkhRfP-lO0WE4Kw/viewform)
+1. Objective
+------------
 
+Build a high-performance, real-time stock order book visualizer using Next.js. This is a live-API challenge using the Binance WebSocket API for aggregate trades and order book deltas.
 
-**1. Objective**
+2. Suggested stack
+------------------
 
-The goal of this assignment is to build a high-performance, real-time stock order book visualizer using NextJS.
+- Framework: Next.js
+- Language: TypeScript
+- State: React Context, `useReducer`, or a small library like Zustand
+- Styling: Tailwind CSS, CSS Modules, or styled-components
 
-This assignment is designed to test your ability to manage complex, high-frequency state, handle real-world API data, and maintain a responsive, non-blocking UI—all critical skills in financial technology.
+3. Core requirements
+--------------------
 
-**Key Constraint:** This is a **live-API challenge**. You must connect to the **live Binance WebSocket API** to stream real-time market data. You will be expected to research the correct API methods to accomplish this.
+### Part 1: WebSocket data feed (Binance API)
 
-**2. Suggested Stack**
+- Connect to Binance WebSocket API
+- Subscribe to:
+  - Aggregate Trades
+  - Order Book Deltas
+- Create a hook (e.g., `useBinanceSocket`) to initialize, parse JSON, expose latest data, handle errors, and reconnect
+- Parse events and remove price levels when amount is `0`
 
-* **Framework:** NextJS
-* **Language:** TypeScript
-* **State Management:** You may use React Context, `useReducer`, or a small library like Zustand.
-* **Styling:** Your choice (Tailwind CSS, CSS Modules, styled-components, etc.). A clean, professional UI is expected.
+### Part 2: Order Book component
 
-**3. Core Requirements**
+- Two columns: Bids (left), Asks (right)
+- Aggregate deltas to maintain the full book (O(1) updates)
+- Sort: Bids DESC, Asks ASC
+- Columns per row: Price, Amount, Total (cumulative)
+- Show spread between best ask and best bid
+- Depth bars with width proportional to cumulative totals
 
-The project is broken down into three main parts.
+### Part 3: Recent Trades component
 
----
+- Display the 50 most recent trades
+- Prepend new trades at the top
+- Flash price color: green for market buy, red for market sell
 
-### Part 1: The WebSocket Data Feed (Binance API)
+4. Evaluation criteria
+----------------------
 
-Your first task is to research and connect to the live Binance API to stream the necessary data.
+- Correctness (aggregation, sorting, totals, spread)
+- Performance (batched updates, memoization, minimal re-renders)
+- API integration robustness
+- Code quality and TypeScript usage
+- UI/UX clarity
 
-**1.1. Connect to the WebSocket API:**
-* You must find and connect to the **Binance WebSocket API**.
-* You will need to research their documentation to subscribe to the two types of data streams required for a trading pair (e.g., BTC/USDT):
-    1.  **Aggregate Trades** (to see recent completed trades)
-    2.  **Order Book Deltas** (to see live changes to the order book)
-* **Recommendation:** Create a custom hook (e.g., `useBinanceSocket`) that initializes the WebSocket connection, handles incoming messages, parses the JSON, and provides the latest data to your components.
-* This hook should also gracefully handle connection errors and attempt to reconnect.
+5. Submission guidelines
+------------------------
 
-**1.2. Handle API Data:**
-* You must parse the data structures provided by the Binance API.
-* **Trade Events:** You will need to extract the price, amount, time, and direction of each completed trade.
-* **Order Book Delta Events:** You will receive frequent updates (deltas) for both bids and asks. You must process these updates correctly.
-* **Important:** An update with an **amount of '0'** means this price level should be removed from the order book.
-
----
-
-### Part 2: The Order Book Component
-
-This is the main component. It must subscribe to your data feed and display the live state of the order book.
-
-**2.1. Layout:**
-* Create a two-column layout: **Bids** (buy orders) on the left and **Asks** (sell orders) on the right.
-
-**2.2. State Management:**
-* Your component must listen to the **order book delta** events from your WebSocket hook.
-* You must aggregate these deltas in your component's state to maintain the full, current picture of the order book. (Hint: A `Map` or a simple object where keys are prices is ideal for $O(1)$ updates).
-
-**2.3. Display & Sorting:**
-* **Bids (Buys):**
-    * Must be sorted by price in **DESCENDING** order (highest bid at the top).
-    * Typically colored green.
-* **Asks (Sells):**
-    * Must be sorted by price in **ASCENDING** order (lowest ask at the top).
-    * Typically colored red.
-
-**2.4. Columns:**
-* Each side (Bids and Asks) must display three columns for each row:
-    * **Price:** The price level (e.g., "70150.50").
-    * **Amount:** The total amount available at that price level.
-    * **Total:** The cumulative total of all amounts from the most competitive price (top of the list) down to that row.
-
-**2.5. The Spread:**
-* Between the Bid and Ask lists, clearly display the **Spread**.
-* **Spread = (Lowest Ask Price) - (Highest Bid Price).**
-
-**2.6. Depth Visualization:**
-* Each row in the order book should have a background bar (green for bids, red for asks).
-* The width of this bar should represent that row's **Total (cumulative)** relative to the largest **Total** in its respective list (Bid or Ask). This creates a "depth chart" effect.
-    
-
----
-
-### Part 3: The Recent Trades Component
-
-This component shows a log of the most recent market activity.
-
-**3.1. Layout:**
-* Create a separate list component that displays the **50 most recent trades**.
-
-**3.2. Data Handling:**
-* Subscribe to the **trade** events from your WebSocket hook.
-* When a new trade arrives, it must be added to the top of the list.
-
-**3.3. Highlighting:**
-* When a new trade appears at the top of the list, its price should flash a color to indicate the trade's direction:
-    * **Green** if it was a **market buy**.
-    * **Red** if it was a **market sell**.
-    * (You will need to determine how to find this information from the API's trade data).
-
----
-
-### 4. Evaluation Criteria
-
-You will be evaluated on the following:
-
-* **Correctness:** Does the order book correctly aggregate deltas? Are sorting, cumulative totals, and the spread calculated properly?
-* **Performance:** This is key. The UI must remain fluid and responsive (no lag or jank) even with high-frequency live data. We will be looking for:
-    * Efficient state updates (e.g., not re-computing the entire book on every delta).
-    * Proper use of React memoization (`useMemo`, `useCallback`, `React.memo`).
-    * Minimal and batched re-renders.
-* **API Integration:** Did you successfully research and implement the correct WebSocket feeds? How robust is the connection?
-* **Code Quality:** Is the code clean, modular, and easy to read? Is state management logical and contained? Is TypeScript used effectively?
-* **UI/UX:** Is the interface clean, professional, and does it present the financial data clearly?
-
-**5. Submission Guidelines**
-* Include a `README.md` file with:
-    * Clear instructions on how to install dependencies (`npm install`) and run the project (`npm start`).
-    * A brief explanation of any design choices or trade-offs you made (e.g., "I chose to use Zustand for state because...").
-* **Host a live, working demo** of your application on a service like Vercel or Netlify. This is the best way for us to review your work.
+- Include README with install/run instructions and design notes
+- Host a live demo (e.g., Vercel) and share the URL
