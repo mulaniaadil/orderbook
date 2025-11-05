@@ -129,7 +129,7 @@ export function useBinanceSocket(symbol: string = "btcusdt"): UseBinanceSocketRe
         const maxAttempts = 6; // ~2s with 300ms backoff
         while (!isDisposed && attempts < maxAttempts) {
           attempts++;
-          const BINANCE_REST_URL = https://api.binance.com/api/v3/depth?symbol=${lower.toUpperCase()}&limit=1000;
+          const BINANCE_REST_URL = https://api.binance.com/api/v3/depth?symbol=${lower.toUpperCase()}&limit=1000`;
 const res = await fetch(BINANCE_REST_URL, { cache: "no-store" });
           if (!res.ok) throw new Error(`Snapshot fetch failed: ${res.status}`);
           const snap = await res.json();
