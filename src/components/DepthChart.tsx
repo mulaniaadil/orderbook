@@ -53,11 +53,17 @@ export function DepthChart({ bids, asks }: Props) {
       draw();
     }
 
+    // ... (around line 56)
     function draw() {
+      // Add this check for both canvas and ctx
+      if (!canvas || !ctx) {
+        return;
+      }
       const { bidCum, askCum, bestBid, bestAsk, maxTotal } = data;
       const w = canvas.width;
       const h = canvas.height;
       ctx.clearRect(0, 0, w, h);
+      // ...
 
       if (!isFinite(bestBid) || !isFinite(bestAsk) || maxTotal === 0) return;
 
