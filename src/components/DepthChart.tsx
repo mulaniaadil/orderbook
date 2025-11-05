@@ -41,7 +41,8 @@ export function DepthChart({ bids, asks }: Props) {
 
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     function resize() {
-      if (!parent) { // <-- Add this IF-statement
+      // Add !canvas to this check
+      if (!canvas || !parent) {
         return;
       }
       const { clientWidth, clientHeight } = parent;
